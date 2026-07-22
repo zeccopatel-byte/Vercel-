@@ -1,0 +1,6 @@
+{
+  "name": "Vercel Loading Animation",
+  "description": "Minimalist centered Vercel triangle loading animations with black line styling on a crisp white background.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
