@@ -745,6 +745,21 @@ footer::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:no
   .win-side button{flex:0 0 auto;width:auto;border:1px solid var(--grey-200);border-radius:999px;padding:0 14px;gap:8px}
   .win-side button[aria-pressed="true"]{border-color:var(--plum-10)}
 }
+
+/* Nav: full menu on desktop and landscape tablets, hamburger only below 1024px */
+.menu-btn{display:none!important}
+.links{display:flex!important}
+.nav .nav-cta{display:inline-flex!important}
+@media(min-width:1024px) and (max-width:1240px){
+  .nav{max-width:calc(100% - 16px)}
+  .links a{padding:0 8px;font-size:13.5px}
+  .nav .btn{padding:0 14px}
+  .brand b{font-size:1.25rem}
+}
+@media(max-width:1023.98px){
+  .links,.nav .nav-cta{display:none!important}
+  .menu-btn{display:grid!important}
+}
 </style>
 </head>
 <body>
