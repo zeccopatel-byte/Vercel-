@@ -619,6 +619,9 @@ a.linkbtn{display:inline-flex;gap:4px;align-items:center}
 .sp-head b{display:block;font:600 16px/1.3 var(--font-sans)}
 .sp-head span{font-size:14.5px;color:var(--grey-600)}
 .sp-actions{display:flex;gap:10px;flex-wrap:wrap}
+.send-panel.sent{background:#E9F4EC;border-color:#CFE6D6}
+.send-panel.sent .sp-head > svg{color:#1E6B3A}
+#contactForm button[type=submit][disabled]{opacity:.7;cursor:progress}
 
 footer{margin-top:clamp(40px,6vw,96px)}
 .foot-paint{height:clamp(260px,34vw,520px);background:var(--land) center 62%/cover;position:relative}
@@ -1413,6 +1416,7 @@ footer::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:no
           <div class="field full" id="f-consent"><label class="consent"><input type="checkbox" id="cf-consent" aria-describedby="m-consent"> I agree that my details can be used to reply to this enquiry. <span class="req" aria-hidden="true">*</span></label><span class="msg" id="m-consent" aria-live="polite"></span></div>
           <div class="full"><button class="btn btn-primary" type="submit">Send enquiry <svg><use href="#i-arrow"/></svg></button></div>
         </div>
+        <div class="send-panel sent" id="formSent" hidden role="status"><div class="sp-head"><svg><use href="#i-check"/></svg><div><b>Thank you, your enquiry has been sent</b><span>Dr. Singh usually replies within five working days. A copy of your details was saved.</span></div></div></div>
         <div class="send-panel" id="formOk" hidden>
           <div class="sp-head"><svg><use href="#i-check"/></svg><div><b>Your enquiry is ready to send</b><span>Send it to <span class="mail">shwetasingh.faculty@gmail.com</span> from your email app. It has not been sent yet.</span></div></div>
           <div class="sp-actions"><a class="btn btn-primary btn-sm" id="mailGo" href="#">Open in email app <svg><use href="#i-arrow"/></svg></a><button type="button" class="btn btn-secondary btn-sm" id="mailCopy">Copy message</button><button type="button" class="btn btn-soft btn-sm" id="mailAddr">Copy email address</button></div>
@@ -1753,7 +1757,18 @@ var BLOSSOM="data:image/webp;base64,UklGRgjTAgBXRUJQVlA4WAoAAAAQAAAAawIAPQMAQUxQ
     var body=['Enquiry type: '+ecur,'Name: '+$('#cf-name').value.trim(),'Email: '+$('#cf-email').value.trim(),'Organisation: '+($('#cf-org').value.trim()||'-')].concat(!$('#f-date').hidden&&$('#cf-date').value?['Event date: '+$('#cf-date').value]:[]).concat(['','Message:',$('#cf-msg').value.trim()]).join('\n');
     MAILMSG='To: '+MAILTO+'\nSubject: '+subj+'\n\n'+body;
     $('#mailGo').href='mailto:'+MAILTO+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body);
-    $('#formOk').hidden=false;$('#formOk').scrollIntoView({behavior:'smooth',block:'nearest'})});
+    var btn=$('#contactForm button[type=submit]'),label=btn.innerHTML;
+    btn.disabled=true;btn.innerHTML='Sending…';$('#formOk').hidden=true;$('#formSent').hidden=true;
+    var payload={type:ecur,name:$('#cf-name').value.trim(),email:$('#cf-email').value.trim(),organisation:$('#cf-org').value.trim(),eventDate:(!$('#f-date').hidden&&$('#cf-date').value)||'',message:$('#cf-msg').value.trim(),consent:$('#cf-consent').checked,website:$('#cf-hp').value};
+    function fallback(){$('#formOk').hidden=false;$('#formOk').scrollIntoView({behavior:'smooth',block:'nearest'})}
+    var done=function(){btn.disabled=false;btn.innerHTML=label};
+    try{
+      fetch('/api/contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}).then(function(r){return r.json().catch(function(){return {ok:false}}).then(function(j){return {status:r.status,j:j}})}).then(function(x){done();
+        if(x.j&&x.j.ok){$('#contactForm').reset();setEnq('Speaking');$('#m-msg-count').textContent='0 / 2000';Object.keys(RULES).forEach(function(k){touched[k]=false;$('#'+RULES[k].f).classList.remove('ok','err')});$('#formSent').hidden=false;$('#formSent').scrollIntoView({behavior:'smooth',block:'nearest'});return}
+        if(x.status===400&&x.j&&x.j.errors){toast('Please check the highlighted fields');updSum();return}
+        fallback()}).catch(function(){done();fallback()});
+    }catch(err){done();fallback()}
+  });
   var MAILTO='shwetasingh.faculty@gmail.com',MAILMSG='';
   $('#mailCopy').addEventListener('click',function(){copy(MAILMSG,'Message')});
   $('#mailAddr').addEventListener('click',function(){copy(MAILTO,'Email address')});
